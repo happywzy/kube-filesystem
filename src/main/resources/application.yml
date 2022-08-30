@@ -1,0 +1,11 @@
+kube:
+  fs:
+    masterUrl: ${KUBE_MASTER_URL:https://192.168.0.12:6443}
+    token: ${KUBE_TOKEN:x.x.x-x-x-x-x}
+    path: ${TMP_DIR:/data/}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 500MB

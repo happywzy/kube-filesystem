@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Kubernetes File Manager</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/bootstrap-select.min.css}">
+    <script th:src="@{/jquery.min.js}"></script>
+    <script th:src="@{/bootstrap.min.js}"></script>
+    <script th:src="@{/bootstrap-select.min.js}"></script>
+</head>
+<body>
+<h2 style="text-align: center;"> Kubernetes Pod/Container File Download/Upload </h2>
+<div id="file-area" style="min-height: 800px">
+    <div class="container my-5" style="text-align:center;margin-bottom: 10px;">
+        <span>Namespace:</span>
+        <span>
+            <select class="selectpicker" id="namespace" data-live-search="true" title="Select Namespace">
+                <option th:each="ns:${namespaces}" th:value="${ns}"
+                        th:text="${ns}"></option>
+            </select>
+        </span>
+        <span>Pod:</span>
+        <span>
+            <select class="selectpicker" id="pod" data-live-search="true" title="Select Pod">
+                <option th:each="pod:${pods}" th:value="${pod}"
+                        th:text="${pod}"></option>
+            </select>
+        </span>
+        <span>Container:</span>
+        <span>
+            <select class="selectpicker" id="container" data-live-search="true" title="Select Container">
+                <option th:each="container:${containers}" th:value="${container}"
+                        th:text="${container}"></option>
+            </select>
+        </span>
+    </div>
+    <div class="container my-5">
+        <div class="table table-striped table-responsive-md">
+            <span>
+               <b>Current Path:   </b>
+            </span>
+            <span id="path"><a href="javascript:void(0)" onclick="openPath('@#$')">/</a></span>
+            <span>
+                <a type="button" class="btn btn-info btn-sm" style="float: right" data-toggle="modal"
+                   data-target="#newFolderModal">New Folder</a>
+            </span>
+        </div>
+        <div>
+            <h5 id="percent" style="text-align:center"></h5>
+        </div>
+        <table class="table table-striped table-responsive-md">
+            <thead>
+            <tr>
+                <th style="padding-bottom: 15px">Name</th>
+                <th style="padding-bottom: 15px">Right</th>
+                <th style="padding-bottom: 15px">Size</th>
+                <th style="padding-bottom: 15px">Time</th>
+                <th style="padding-bottom: 5px">Operation
+                    <a type="button" class="btn btn-default btn-sm" style="float: right;" href="javascript:void(0);"
+                       onclick="setTbody()">
+                        <span class="glyphicon glyphicon-refresh"></span>
+                    </a>
+                </th>
+            </tr>
+            </thead>
+            <tbody id="tbody">
+            <!--<tr th:each="podFile : ${list}">-->
+            <!--<td th:text="${podFile.name}"></td>-->
+            <!--<td th:text="${podFile.right}"></td>-->
+            <!--<td th:text="${podFile.size}"></td>-->
+            <!--<td th:text="${podFile.time}"></td>-->
+            <!--<td>-->
+            <!--<a th:href="@{/download/{name}(name=${podFile.name},type=${podFile.type})}">-->
+            <!--<button type="button" class="btn btn-success btn-sm">Download</button>-->
+            <!--</a>&nbsp;&nbsp;-->
+            <!--<a th:if="${podFile.type}==false" th:href="@{/download/{name}(name=${podFile.name})}">-->
+            <!--<button type="button" class="btn btn-info btn-sm">&nbsp;&nbsp;Open&nbsp;&nbsp;</button>&nbsp;&nbsp;-->
+            <!--</a>-->
+            <!--<a th:data-name="${podFile.name}" data-toggle="modal" data-target="#deleteModal">-->
+            <!--<button type="button" class="btn btn-danger btn-sm">&nbsp;Delete&nbsp;</button>-->
+            <!--</a>-->
+            <!--</td>-->
+            <!--</tr>-->
+            </tbody>
+        </table>
+        <div class="modal fade" id="newFolderModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        New Folder
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control" id="folder-name"
+                               placeholder="Please input new folder name"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success btn-sm" data-dismiss="modal">cancel</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="create_folder()">create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        Please confirm
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" style="display:none" class="form-control" id="delete-name"
+                               readonly="readonly" hidden="hidden">
+                        Are you sure you want to delete? <h5 id="delete-p" style="color: red"></h5> Cannot recover after
+                        deletion!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success btn-sm" data-dismiss="modal">cancel</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="delete_file()">confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/kube.file.js}"></script>
+</body>
+</html>
