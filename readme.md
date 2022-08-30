@@ -21,3 +21,6 @@ open in the browser use your ip, like `http://127.0.0.1:8080`
 - download the file or folder
 - create new folder
 - delete file or folder
+
+## tool
+![image](example.png)
