@@ -61,10 +61,12 @@ public class FileService {
         return list;
     }
 
+    // upload Dir, TODO
     public void uploadDir(MultipartFile[] dir) throws IOException {
-
+        
     }
 
+    // upload file
     public void upload(String namespace, String pod, String container, String containerPath, MultipartFile file) throws Exception {
         String localPath = getLocalPath(namespace, pod, container, containerPath);
         byte[] bytes = file.getBytes();

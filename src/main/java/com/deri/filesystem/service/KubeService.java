@@ -50,10 +50,12 @@ public class KubeService {
         client = new DefaultKubernetesClient(config);
     }
 
+    // get namespace list from kubernetes
     public List<String> getNamespaces() {
         return client.namespaces().list().getItems().stream().map(s -> s.getMetadata().getName()).collect(Collectors.toList());
     }
 
+    // get pod list from a namespace
     public List<String> getPods(String namespace) {
         List<String> pods = client.pods().inNamespace(namespace).list()
                 .getItems()
@@ -64,6 +66,7 @@ public class KubeService {
         return pods;
     }
 
+    // get containers from a pod 
     public List<String> getContainers(String namespace, String pod) {
         List<String> containers =
                 client.pods().inNamespace(namespace)
@@ -72,6 +75,7 @@ public class KubeService {
         return containers;
     }
 
+    // upload file to container
     public void uploadFileToContainer(String namespace, String pod, String container,
                                       String localPath, String containerPath, String fileName) {
         File fileToUpload = new File(localPath + fileName);
