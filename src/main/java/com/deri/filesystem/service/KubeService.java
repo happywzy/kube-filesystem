@@ -19,6 +19,8 @@ import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +42,12 @@ public class KubeService {
     @Autowired
     FsConfig fsConfig;
 
+    // 过滤掉系统名空间
+    private List<String> SYSTEM_NAMESPACES = Arrays.asList(
+            "kubesphere-monitoring-federated", "kubesphere-controls-system", "kubesphere-system", "kube-node-lease", "kube-public",
+            "kube-system", "default", "kubesphere-monitoring-system", "longhorn-system", "loki", "ingress-nginx", "exporter"
+    );
+
     @PostConstruct
     private void kubeInit() {
         Config config = new ConfigBuilder()
@@ -50,12 +58,13 @@ public class KubeService {
         client = new DefaultKubernetesClient(config);
     }
 
-    // get namespace list from kubernetes
     public List<String> getNamespaces() {
-        return client.namespaces().list().getItems().stream().map(s -> s.getMetadata().getName()).collect(Collectors.toList());
+        return client.namespaces().list().getItems().stream()
+                .map(s -> s.getMetadata().getName())
+                .filter(name -> !SYSTEM_NAMESPACES.contains(name))
+                .collect(Collectors.toList());
     }
 
-    // get pod list from a namespace
     public List<String> getPods(String namespace) {
         List<String> pods = client.pods().inNamespace(namespace).list()
                 .getItems()
@@ -66,7 +75,6 @@ public class KubeService {
         return pods;
     }
 
-    // get containers from a pod 
     public List<String> getContainers(String namespace, String pod) {
         List<String> containers =
                 client.pods().inNamespace(namespace)
@@ -75,8 +83,7 @@ public class KubeService {
         return containers;
     }
 
-    // upload file to container
-    public void uploadFileToContainer(String namespace, String pod, String container,
+    public void uploadFileToContainer(String username, String namespace, String pod, String container,
                                       String localPath, String containerPath, String fileName) {
         File fileToUpload = new File(localPath + fileName);
         try {
@@ -85,7 +92,7 @@ public class KubeService {
                     .inContainer(container)
                     .file(containerPath + fileName)
                     .upload(fileToUpload.toPath());
-            log.info("upload file {} to container success, namespace:{}, pod:{}, container:{}", fileName, namespace, pod, container);
+            log.info("[{}] upload file {} to container success, namespace:{}, pod:{}, container:{}", username, fileName, namespace, pod, container);
         } catch (Exception e) {
             throw e;
         }
@@ -97,7 +104,6 @@ public class KubeService {
                 .withName("test-v1-78bbccf595-bpjst")
                 .dir("/tmp/test/dir")
                 .upload(fileToUpload.toPath());
-
     }
 
     public void downloadFileFromContainer(String namespace, String pod, String container,
@@ -113,24 +119,24 @@ public class KubeService {
                 .copy(downloadToPath);
     }
 
-    public void downloadDirectoryFromContainer(String namespace, String pod, String container,
+    public void downloadDirectoryFromContainer(String username, String namespace, String pod, String container,
                                                String localPath, String containerPath, String dir) {
         File f = new File(localPath + dir);
         if (!f.exists()) f.mkdirs();
-        String result = containerExec(namespace, pod, container, FileService.CMD_LS + containerPath + dir);
+        String result = containerExec(username, namespace, pod, container, FileService.CMD_LS + containerPath + dir);
         for (String line : result.split("\\n")) {
             if (line.startsWith("total") || line.startsWith("Total")) continue;
             String[] tmp = line.split("\\s+");
             String fileName = tmp[8];
             if (tmp[0].startsWith("d")) {
-                downloadDirectoryFromContainer(namespace, pod, container, localPath + dir + "/", containerPath + dir + "/", fileName);
+                downloadDirectoryFromContainer(username, namespace, pod, container, localPath + dir + "/", containerPath + dir + "/", fileName);
             } else {
                 downloadFileFromContainer(namespace, pod, container, localPath + dir + "/", containerPath + dir + "/", fileName);
             }
         }
     }
 
-    public String containerExec(String namespace, String pod, String container, String cmd) {
+    public String containerExec(String username, String namespace, String pod, String container, String cmd) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             CountDownLatch execLatch = new CountDownLatch(1);
@@ -139,7 +145,7 @@ public class KubeService {
                     .writingOutput(out)
                     .writingError(out)
 //                    .withTTY()
-                    .usingListener(new MyPodExecListener(namespace, pod, container, execLatch, cmd))
+                    .usingListener(new MyPodExecListener(username, namespace, pod, container, execLatch, cmd))
                     .exec(cmd.split(" "));
             boolean latchTerminationStatus = execLatch.await(10, TimeUnit.SECONDS);
             if (!latchTerminationStatus) {
@@ -155,13 +161,15 @@ public class KubeService {
 
     private class MyPodExecListener implements ExecListener {
         private CountDownLatch execLatch;
+        private String username;
         private String namespace;
         private String pod;
         private String container;
         private String cmd;
 
-        public MyPodExecListener(String namespace, String pod, String container, CountDownLatch execLatch, String cmd) {
+        public MyPodExecListener(String username, String namespace, String pod, String container, CountDownLatch execLatch, String cmd) {
             this.execLatch = execLatch;
+            this.username = username;
             this.namespace = namespace;
             this.pod = pod;
             this.container = container;
@@ -170,18 +178,18 @@ public class KubeService {
 
         @Override
         public void onOpen() {
-            log.info("namespace:{}, pod:{}, container:{}, cmd:{},Shell was opened", namespace, pod, container, cmd);
+            log.info("[{}], namespace:{}, pod:{}, container:{}, cmd:{},Shell was opened", username, namespace, pod, container, cmd);
         }
 
         @Override
         public void onFailure(Throwable t, Response failureResponse) {
-            log.info("namespace:{}, pod:{}, container:{}, cmd:{},Shell was failure, error: {}", namespace, pod, container, cmd, t.getMessage());
+            log.info("[{}], namespace:{}, pod:{}, container:{}, cmd:{},Shell was failure, error: {}", username, namespace, pod, container, cmd, t.getMessage());
             execLatch.countDown();
         }
 
         @Override
         public void onClose(int code, String reason) {
-            log.info("namespace:{}, pod:{}, container:{}, cmd:{},Shell was close, code: {}, reason: {}", namespace, pod, container, cmd, code, reason);
+            log.info("[{}], namespace:{}, pod:{}, container:{}, cmd:{},Shell was close, code: {}, reason: {}", username, namespace, pod, container, cmd, code, reason);
             execLatch.countDown();
         }
     }

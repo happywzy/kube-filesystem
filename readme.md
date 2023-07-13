@@ -11,7 +11,8 @@ kubectl describe secrets -n kube-system `kubectl describe sa lg -n kube-system |
 
 ## start
 ```bash
-docker run -d --name kube-filesystem -e KUBE_MASTER_URL=xxx -e KUBE_TOKEN=xxx -p 8080:8080 hub.deri.org.cn/library/kube-filesystem:v1.0.0
+# default -e TMP_DIR=/data/
+docker run -d --name kube-filesystem -e KUBE_MASTER_URL=xxx -e KUBE_TOKEN=xxx -e KS_API=http://ks-apiserver.kubesphere-system.svc -p 8080:8080 hub.deri.org.cn/library/kube-filesystem:v1.0.0
 ```
 ## open
 open in the browser use your ip, like `http://127.0.0.1:8080`
@@ -21,6 +22,3 @@ open in the browser use your ip, like `http://127.0.0.1:8080`
 - download the file or folder
 - create new folder
 - delete file or folder
-
-## tool
-![image](example.png)

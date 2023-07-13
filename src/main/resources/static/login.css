@@ -1,0 +1,21 @@
+.middle {
+    float: none;
+    display: inline-block;
+    vertical-align: middle;
+}
+.top-buffer {
+    margin-top: 10px;
+}
+
+#login {
+    position: absolute;
+    left:20%;
+    top:20%;
+}
+
+.alog {
+    padding-right:35px;
+    padding-left:35px;
+    margin-right:auto;
+}
+

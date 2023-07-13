@@ -46,9 +46,9 @@ public class FileService {
     @Autowired
     KubeService kubeService;
 
-    public List<PodFile> getFileList(String namespace, String pod, String container, String containerPath) {
+    public List<PodFile> getFileList(String username, String namespace, String pod, String container, String containerPath) {
         List<PodFile> list = new ArrayList<>();
-        String result = kubeService.containerExec(namespace, pod, container, CMD_LS + containerPath);
+        String result = kubeService.containerExec(username, namespace, pod, container, CMD_LS + containerPath);
         for (String line : result.split("\\n")) {
             if (line.startsWith("total") || line.startsWith("Total")) continue;
             String[] tmp = line.split("\\s+");
@@ -61,43 +61,44 @@ public class FileService {
         return list;
     }
 
-    // upload Dir, TODO
     public void uploadDir(MultipartFile[] dir) throws IOException {
-        
+
     }
 
-    // upload file
-    public void upload(String namespace, String pod, String container, String containerPath, MultipartFile file) throws Exception {
+    public void upload(String username, String namespace, String pod, String container, String containerPath, MultipartFile file) throws Exception {
         String localPath = getLocalPath(namespace, pod, container, containerPath);
         byte[] bytes = file.getBytes();
         Path path = Paths.get(localPath + file.getOriginalFilename());
         Files.write(path, bytes);
-        kubeService.uploadFileToContainer(namespace, pod, container, localPath, containerPath, file.getOriginalFilename());
+        kubeService.uploadFileToContainer(username, namespace, pod, container, localPath, containerPath, file.getOriginalFilename());
     }
 
-    public ResponseEntity<Resource> download(String namespace, String pod, String container,
+    public ResponseEntity<Resource> download(String username, String namespace, String pod, String container,
                                              String containerPath, String fileName, boolean type) throws IOException {
         String localPath = getLocalPath(namespace, pod, container, containerPath);
         File file = null;
         if (type) {
             kubeService.downloadFileFromContainer(namespace, pod, container, localPath, containerPath, fileName);
             file = new File(localPath + fileName);
+            log.info("[{}] download file {} success, namespace:{}, pod:{}, container:{}", username, containerPath + fileName, namespace, pod, container);
         } else {
-            kubeService.downloadDirectoryFromContainer(namespace, pod, container, localPath, containerPath, fileName);
+            kubeService.downloadDirectoryFromContainer(username, namespace, pod, container, localPath, containerPath, fileName);
             String zip = localPath + fileName + ".zip";
             zip(localPath + fileName, zip);
             file = new File(zip);
+            log.info("[{}] download folder {} success, namespace:{}, pod:{}, container:{}", username, containerPath + fileName + ".zip", namespace, pod, container);
         }
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource
                 (Files.readAllBytes(path));
-        return ResponseEntity.ok().headers(this.headers(file.getName()))
+//        return ResponseEntity.ok().headers(this.headers(file.getName()))
+        return ResponseEntity.ok().header("Content-disposition", "attachment;filename=" + new String(file.getName().getBytes("UTF-8"), "ISO-8859-1"))
                 .contentLength(file.length())
                 .contentType(MediaType.parseMediaType
                         ("application/octet-stream")).body(resource);
     }
 
-    public void deleteFile(String namespace, String pod, String container,
+    public void deleteFile(String username, String namespace, String pod, String container,
                            String containerPath, String fileName) {
         try {
             String localPath = getLocalPath(namespace, pod, container, containerPath);
@@ -105,12 +106,12 @@ public class FileService {
         } catch (IOException e) {
             log.error("", e);
         }
-        kubeService.containerExec(namespace, pod, container, CMD_RM + containerPath + fileName);
+        kubeService.containerExec(username, namespace, pod, container, CMD_RM + containerPath + fileName);
     }
 
-    public void newFolder(String namespace, String pod, String container,
+    public void newFolder(String username, String namespace, String pod, String container,
                           String containerPath, String fileName) {
-        kubeService.containerExec(namespace, pod, container, CMD_MK + containerPath + fileName);
+        kubeService.containerExec(username, namespace, pod, container, CMD_MK + containerPath + fileName);
     }
 
     private String getLocalPath(String namespace, String pod, String container, String containerPath) {
