@@ -1,11 +1,12 @@
 kube:
   fs:
-    masterUrl: ${KUBE_MASTER_URL:https://192.168.0.12:6443}
-    token: ${KUBE_TOKEN:x.x.x-x-x-x-x}
+    masterUrl: ${KUBE_MASTER_URL:https://192.168.3.13:6443}
+    token: ${KUBE_TOKEN:eyJhbGciOiJSUzI1NiIsImtpZCI6IjBVTkwzXzJaNGJrZmVKbXNIVWdOMHJ3OUs1VU00TzhaVlNjTlpPYzRfSFkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJsZy10b2tlbi1ic3h0biIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJsZyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImM1NDNjZGY2LWYzNzEtNDMyYy04OGU2LTQ3MGQ4MzY4ZTRhMSIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDprdWJlLXN5c3RlbTpsZyJ9.kIhelZXtcdhN1jMCj64KC0pu9JDRJFbjDpH_hUiEny7om7OSqrcrIA3f7USwbxMaqpTFZCEK5HXp3HcKagR90ua4o8MiM3pE22sNmr52sN5-sfoEMElNq4i9dV12Pgm5DMM1rey1Z19XooF8c-aa6BcfUqxfSRrgfQVutG8n5qcGi9aukXpUAWXt0u-7b7E_Ly6Vv2895JG5rZRsuEA1xyaMX5dhqldtp1qlPq3wufwPQZkgKzR5JeFJfJ-GfeX7b7iIkHgMdM1lRnI243C8uk65o2qO0jh9ajNKmFEeh0Eb23g2lRJhiMyb2THH91UTaD4sy1c1JtWJ796AMI_hYA}
     path: ${TMP_DIR:/data/}
+    ksApi: ${KS_API:http://192.168.3.13:31568}
 
 spring:
   servlet:
     multipart:
-      max-file-size: 100MB
+      max-file-size: 500MB
       max-request-size: 500MB

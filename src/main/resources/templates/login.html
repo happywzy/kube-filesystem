@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/login.css}">
+    <link rel="stylesheet" th:href="@{/bootstrap.min.css}">
+    <script th:src="@{/jquery.min.js}"></script>
+    <script th:src="@{/bootstrap.min.js}"></script>
+    <script th:src="@{/jsencrypt.min.js}"></script>
+</head>
+<body onkeydown="keyLogin();">
+<div class="container" id="login">
+    <div class="row top-buffer">
+        <div class="col-lg-4 col-lg-offset-4">
+            <h3><strong>Kubernetes File Manager Login</strong></h3>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-lg-4 col-lg-offset-4">
+            <div class="input-group">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-user" aria-hidden="true"></i></span>
+                <input type="text" class="form-control" id="userName" placeholder="please input kubesphere username"/>
+            </div>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-lg-4 col-lg-offset-4">
+            <div class="input-group">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-lock" aria-hidden="true"></i></span>
+                <input type="password" class="form-control" id="password"
+                       placeholder="please input kubesphere password"/>
+            </div>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-lg-4 col-lg-offset-4">
+            <a id="result"></a>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <div class="col-lg-4 col-lg-offset-4">
+            <button type="button" style="width: 177px" class="btn btn-danger" onclick="reset()">Reset</button>
+            <button type="button" style="width: 177px" class="btn btn-info" onclick="login()">Login</button>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+    var encrypt = new JSEncrypt();
+    encrypt.setPublicKey('MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCyVP9lbEL+693KGnwM5ph8WG0CAIVJm2LqhfELZKjbCNa1wGRR/5qNDlKx3UCZkqHhCR/c73Z57p3jXw7tu82PgvKzu2qyjwaQeYf/r9K2pbq3N86+41jKj5oi+V7rcTN6jEuv6mmWySV8WsD6JV81n/utgx8yetK9JKWNZMLsXwIDAQAB');
+
+    function reset() {
+        $("#userName").val("");
+        $("#password").val("");
+        $("#result").html("");
+    }
+
+    function login() {
+        var userName = getById("userName").value;
+        var password = getById("password").value;
+        //密码加密传输
+        var encrypted = encrypt.encrypt(password);
+        var con = {userName: userName, password: encrypted};
+        var url = "/login";
+        $.ajax({
+            type: "post",
+            url: url,
+            data: JSON.stringify(con),
+            contentType: "application/json",
+            success: function (result) {
+                if (result && result == '200') {
+                    window.location.href = '/';
+                } else {
+                    $("#result").html("<p style='color: red'>" + result + "</p>");
+                }
+            }
+        })
+    }
+
+    function getById(id) {
+        return document.getElementById(id);
+    }
+
+    function keyLogin() {
+        if (event.keyCode == 13)
+            login()
+    }
+</script>
+</body>
+</html>

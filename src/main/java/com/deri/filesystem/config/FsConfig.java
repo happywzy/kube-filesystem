@@ -18,4 +18,5 @@ public class FsConfig {
     private String token;
     private String masterUrl;
     private String path;
+    private String ksApi;
 }

@@ -10,7 +10,7 @@
     <script th:src="@{/bootstrap-select.min.js}"></script>
 </head>
 <body>
-<h2 style="text-align: center;"> Kubernetes Pod/Container File Download/Upload </h2>
+<h3 style="text-align: center;"> Kubernetes Pod/Container File Download/Upload<span th:if="${username}">(<b th:text="${username}" style="color: #2e6da4"></b>)</span></h3>
 <div id="file-area" style="min-height: 800px">
     <div class="container my-5" style="text-align:center;margin-bottom: 10px;">
         <span>Namespace:</span>
